@@ -2,7 +2,7 @@
 
 <img src="docs/assets/avail-header.svg" alt="Avail Logo" width="600" height="120" />
 
-**A robust, modern domain intelligence platform.**
+**A modern interface for live WHOIS & RDAP lookups.**
 
 Check domain availability across 1000+ TLDs with real-time WHOIS and RDAP lookups.  
 Built for developers, domain investors, and branding experts.
@@ -23,7 +23,7 @@ Built for developers, domain investors, and branding experts.
 
 ## Overview
 
-**Avail** is a domain availability checker designed to streamline domain research and branding workflows. It provides an efficient interface for checking domain availability across multiple top-level domains while delivering comprehensive WHOIS data and registration details through an intuitive, responsive UI.
+**Avail** is a domain availability checker designed to streamline domain research and branding workflows. It provides an efficient interface for checking domain availability across multiple top-level domains while delivering raw WHOIS and RDAP registration data through an intuitive, responsive UI.
 
 ## Quick Demo
 
