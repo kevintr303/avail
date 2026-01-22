@@ -25,6 +25,17 @@ Built for developers, domain investors, and branding experts.
 
 **Avail** is a domain availability checker designed to streamline domain research and branding workflows. It provides an efficient interface for checking domain availability across multiple top-level domains while delivering raw WHOIS and RDAP registration data through an intuitive, responsive UI.
 
+## Architecture & Privacy
+
+Avail performs **live WHOIS and RDAP lookups only**.
+
+- No domain searches are stored
+- No WHOIS results are cached
+- No user data is collected
+- All history and preferences are stored locally in the browser
+
+Avail is intentionally designed as a **stateless, read-only inspection tool**. Avail does not provide registration, pricing, valuation, or registrar integrations by design.
+
 ## Quick Demo
 
 <p align="center" width="100%">
@@ -36,7 +47,7 @@ Built for developers, domain investors, and branding experts.
 - **Multi-TLD Support** — Query domain availability across 1,000+ TLDs simultaneously
 - **Real-Time WHOIS Data** — Access registration dates, registrar information, nameservers, and registry details instantly
 - **Batch Domain Search** — Check multiple domain extensions in a single search operation
-- **Modern Interface** — Clean, responsive design optimized for both desktop and mobile workflows
+- **Workspace-Style Interface** — Multi-panel WHOIS inspection with side-by-side views, built-in themes, and a layout optimized for comparison and long-running research sessions
 - **Type-Safe Architecture** — Built with TypeScript for enhanced reliability and developer experience
 
 ## Technology Stack
