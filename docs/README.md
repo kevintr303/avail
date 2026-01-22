@@ -133,11 +133,10 @@ Retrieve list of available TLDs.
 - `403 Forbidden`: Unauthorized origin
 - `429 Too Many Requests`: Rate limit exceeded
 
-#### Caching
+#### TLD List
 
-- TLD list is cached for 24 hours in memory
-- Fetched from IANA registry (`https://data.iana.org/TLD/tlds-alpha-by-domain.txt`)
-- Falls back to 30 popular TLDs on error
+- TLD list is loaded from static JSON file (`config/tlds.json`)
+- Includes all TLDs, second-level, and third-level domains
 
 #### Example
 
@@ -449,10 +448,10 @@ No environment variables are currently required. The application uses:
 ### Performance Considerations
 
 - **Caching:**
-  - TLD lists cached in memory for 24 hours
-  - TLD lists cached in browser localStorage for 24 hours
   - RDAP bootstrap data cached in memory for 24 hours
   - Next.js fetch cache with 86400 second revalidation
+  - User preferences (selected TLDs, theme) cached in browser cookies
+  - Search history cached in browser localStorage (max 50 entries)
 - **Rate Limiting:** 10 requests per minute per IP address
 - **Timeouts:** WHOIS lookups timeout after 8 seconds
 - **Fallback:** RDAP fallback when WHOIS fails or returns "not found" errors

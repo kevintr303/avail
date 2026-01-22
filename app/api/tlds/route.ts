@@ -1,78 +1,69 @@
 import { NextRequest, NextResponse } from "next/server";
 import { rateLimit, isOriginAllowed } from "@/lib/rate-limit";
+import tldsData from "@/config/tlds.json";
 
 const POPULAR_TLDS = [
   "com",
   "net",
   "org",
-  "io",
-  "dev",
-  "app",
   "co",
+  "us",
+  "io",
   "ai",
+  "app",
   "xyz",
-  "tech",
+  "info",
+  "shop",
   "online",
   "store",
   "site",
-  "blog",
-  "cloud",
+  "tech",
+  "club",
   "me",
-  "info",
-  "biz",
-  "tv",
-  "us",
-  "uk",
-  "ca",
-  "au",
-  "de",
-  "fr",
-  "jp",
-  "cn",
-  "in",
-  "ru",
-  "br",
+  "dev",
+  "cloud",
+  "live",
+  "digital",
+  "design",
+  "pro",
+  "vip",
+  "work",
+  "top",
+  "life",
+  "world",
+  "space",
+  "media",
+  "agency",
+  "services",
+  "studio",
+  "today",
+  "news",
+  "blog",
+  "link",
+  "click",
+  "bet",
+  "wiki",
+  "guru",
+  "photography",
+  "expert",
+  "group",
+  "solutions",
+  "marketing",
+  "email",
+  "company",
+  "network",
+  "website"
 ];
 
-interface CacheEntry {
-  tlds: string[];
-  timestamp: number;
-}
+function getTlds(): string[] {
+  const allTlds = (tldsData.tlds || []).map((tld) => tld.toLowerCase());
 
-const CACHE_DURATION = 24 * 60 * 60 * 1000;
-let cachedTlds: CacheEntry | null = null;
+  const sortedTlds = [
+    ...POPULAR_TLDS.filter((tld) => allTlds.includes(tld)),
+    ...allTlds.filter((tld) => !POPULAR_TLDS.includes(tld)).sort((a, b) => a.localeCompare(b)),
+  ];
 
-async function fetchIanaTlds(): Promise<string[]> {
-  try {
-    const response = await fetch("https://data.iana.org/TLD/tlds-alpha-by-domain.txt", {
-      next: { revalidate: 86400 },
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to fetch IANA TLDs: ${response.status}`);
-    }
-
-    const text = await response.text();
-    const lines = text.split("\n");
-
-    const tlds: string[] = [];
-    for (const line of lines) {
-      const trimmed = line.trim();
-      if (trimmed && !trimmed.startsWith("#") && trimmed.length > 0) {
-        const tld = trimmed.toLowerCase();
-        if (tld && tld.length >= 2) {
-          tlds.push(tld);
-        }
-      }
-    }
-
-    return tlds;
-  } catch (error) {
-    if (process.env.NODE_ENV === "development") {
-      console.error("Error fetching IANA TLDs:", error);
-    }
-    return POPULAR_TLDS;
-  }
+  return sortedTlds;
 }
 
 export async function GET(request: NextRequest) {
@@ -97,34 +88,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const now = Date.now();
-    if (cachedTlds && now - cachedTlds.timestamp < CACHE_DURATION) {
-      return NextResponse.json(
-        {
-          tlds: cachedTlds.tlds,
-          popular: POPULAR_TLDS,
-        },
-        {
-          headers: {
-            "X-RateLimit-Limit": rateLimitResult.limit.toString(),
-            "X-RateLimit-Remaining": rateLimitResult.remaining.toString(),
-            "X-RateLimit-Reset": new Date(rateLimitResult.reset).toISOString(),
-          },
-        }
-      );
-    }
-
-    const allTlds = await fetchIanaTlds();
-
-    const sortedTlds = [
-      ...POPULAR_TLDS.filter((tld) => allTlds.includes(tld)),
-      ...allTlds.filter((tld) => !POPULAR_TLDS.includes(tld)).sort((a, b) => a.localeCompare(b)),
-    ];
-
-    cachedTlds = {
-      tlds: sortedTlds,
-      timestamp: now,
-    };
+    const sortedTlds = getTlds();
 
     return NextResponse.json(
       {
@@ -144,7 +108,7 @@ export async function GET(request: NextRequest) {
       console.error("Error in TLDs API:", error);
     }
     return NextResponse.json(
-      { error: "Failed to fetch TLDs", tlds: POPULAR_TLDS, popular: POPULAR_TLDS },
+      { error: "Failed to load TLDs", tlds: POPULAR_TLDS, popular: POPULAR_TLDS },
       { status: 500 }
     );
   }

@@ -376,8 +376,9 @@ async function checkDomainAvailability(
           return fallbackResult;
         }
         return {
-          available: true,
+          available: false,
           whoisData: null,
+          error: "TLD not found",
         };
       }
 
@@ -435,6 +436,11 @@ async function checkDomainAvailability(
         if (fallbackResult) {
           return fallbackResult;
         }
+        return {
+          available: false,
+          whoisData: null,
+          error: "TLD not found",
+        };
       }
 
       return {
@@ -449,8 +455,9 @@ async function checkDomainAvailability(
     }
 
     return {
-      available: !whoisTaken,
-      whoisData: whoisTaken && whoisData && Object.keys(whoisData).length > 0 ? whoisData : null,
+      available: false,
+      whoisData: null,
+      error: "TLD not found",
     };
   }
 
@@ -467,6 +474,11 @@ async function checkDomainAvailability(
       if (fallbackResult) {
         return fallbackResult;
       }
+      return {
+        available: false,
+        whoisData: null,
+        error: "TLD not found",
+      };
     }
   }
 

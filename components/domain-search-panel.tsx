@@ -30,14 +30,6 @@ export default function DomainSearchPanel({ onResultClick }: DomainSearchPanelPr
 
   useEffect(() => {
     const fetchTlds = async () => {
-      const cached = storage.getCachedTlds();
-      if (cached) {
-        setTlds(cached.tlds);
-        setPopularTlds(cached.popular);
-        setLoadingTlds(false);
-        return;
-      }
-
       try {
         const response = await fetch("/api/tlds");
         const data = await response.json();
@@ -46,8 +38,6 @@ export default function DomainSearchPanel({ onResultClick }: DomainSearchPanelPr
 
         setTlds(fetchedTlds);
         setPopularTlds(fetchedPopular);
-
-        storage.setCachedTlds(fetchedTlds, fetchedPopular);
       } catch (error) {
         if (process.env.NODE_ENV === "development") {
           console.error("Failed to fetch TLDs:", error);
@@ -101,13 +91,28 @@ export default function DomainSearchPanel({ onResultClick }: DomainSearchPanelPr
   };
 
   const handleSearch = async () => {
-    if (!domain.trim() || selectedTlds.length === 0) return;
+    if (!domain.trim()) return;
 
-    const cleanDomain = domain
+    const cleanedInput = domain
       .trim()
       .toLowerCase()
-      .replace(/^(https?:\/\/)?(www\.)?/, "")
-      .split(".")[0];
+      .replace(/^(https?:\/\/)?(www\.)?/, "");
+
+    const parts = cleanedInput.split(".");
+    const hasTld = parts.length > 1;
+
+    let searchDomain: string;
+    let searchTlds: string[];
+
+    if (hasTld) {
+      const tld = parts.slice(-1)[0];
+      searchDomain = parts.slice(0, -1).join(".");
+      searchTlds = [tld];
+    } else {
+      if (selectedTlds.length === 0) return;
+      searchDomain = cleanedInput;
+      searchTlds = selectedTlds;
+    }
 
     setLoading(true);
     setResults([]);
@@ -116,7 +121,7 @@ export default function DomainSearchPanel({ onResultClick }: DomainSearchPanelPr
       const response = await fetch("/api/check", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ domain: cleanDomain, tlds: selectedTlds }),
+        body: JSON.stringify({ domain: searchDomain, tlds: searchTlds }),
       });
 
       const data = await response.json();
@@ -124,7 +129,7 @@ export default function DomainSearchPanel({ onResultClick }: DomainSearchPanelPr
 
       storage.addToHistory({
         timestamp: Date.now(),
-        query: cleanDomain,
+        query: hasTld ? cleanedInput : searchDomain,
         results: data.results || [],
       });
 
@@ -180,7 +185,7 @@ export default function DomainSearchPanel({ onResultClick }: DomainSearchPanelPr
             <button
               data-clickable
               onClick={handleSearch}
-              disabled={loading || !domain.trim() || selectedTlds.length === 0}
+              disabled={loading || !domain.trim() || (!domain.includes(".") && selectedTlds.length === 0)}
               className="h-10 px-4 rounded-lg bg-[var(--color-quinary)] text-white text-sm font-medium transition-all hover:opacity-90 disabled:opacity-30 flex items-center gap-1.5 shrink-0"
             >
               {loading ? (
@@ -359,13 +364,12 @@ export default function DomainSearchPanel({ onResultClick }: DomainSearchPanelPr
                                     data-clickable
                                     onClick={() => !isDisabled && handleTldToggle(tld)}
                                     disabled={isDisabled}
-                                    className={`text-[11px] px-2.5 py-1.5 rounded-md transition-all ${
-                                      isSelected
-                                        ? "bg-[var(--color-quinary)]/20 text-[var(--color-quinary)] border border-[var(--color-quinary)]/30"
-                                        : isDisabled
-                                          ? "bg-white/3 text-white/15 border border-white/5 cursor-not-allowed"
-                                          : "bg-white/5 text-white/40 border border-white/5 hover:bg-white/10 hover:text-white/60"
-                                    }`}
+                                    className={`text-[11px] px-2.5 py-1.5 rounded-md transition-all ${isSelected
+                                      ? "bg-[var(--color-quinary)]/20 text-[var(--color-quinary)] border border-[var(--color-quinary)]/30"
+                                      : isDisabled
+                                        ? "bg-white/3 text-white/15 border border-white/5 cursor-not-allowed"
+                                        : "bg-white/5 text-white/40 border border-white/5 hover:bg-white/10 hover:text-white/60"
+                                      }`}
                                   >
                                     .{tld}
                                   </button>
@@ -393,13 +397,12 @@ export default function DomainSearchPanel({ onResultClick }: DomainSearchPanelPr
                                     data-clickable
                                     onClick={() => !isDisabled && handleTldToggle(tld)}
                                     disabled={isDisabled}
-                                    className={`text-[11px] px-2.5 py-1.5 rounded-md transition-all ${
-                                      isSelected
-                                        ? "bg-[var(--color-quinary)]/20 text-[var(--color-quinary)] border border-[var(--color-quinary)]/30"
-                                        : isDisabled
-                                          ? "bg-white/3 text-white/15 border border-white/5 cursor-not-allowed"
-                                          : "bg-white/5 text-white/40 border border-white/5 hover:bg-white/10 hover:text-white/60"
-                                    }`}
+                                    className={`text-[11px] px-2.5 py-1.5 rounded-md transition-all ${isSelected
+                                      ? "bg-[var(--color-quinary)]/20 text-[var(--color-quinary)] border border-[var(--color-quinary)]/30"
+                                      : isDisabled
+                                        ? "bg-white/3 text-white/15 border border-white/5 cursor-not-allowed"
+                                        : "bg-white/5 text-white/40 border border-white/5 hover:bg-white/10 hover:text-white/60"
+                                      }`}
                                   >
                                     .{tld}
                                   </button>
@@ -471,13 +474,12 @@ export default function DomainSearchPanel({ onResultClick }: DomainSearchPanelPr
                     <span className="text-xs font-medium text-white/80">{result.domain}</span>
                     <div className="flex items-center gap-1.5">
                       <div
-                        className={`w-2 h-2 rounded-full ${
-                          result.error
-                            ? "bg-yellow-400"
-                            : result.available
-                              ? "bg-green-400"
-                              : "bg-red-400"
-                        }`}
+                        className={`w-2 h-2 rounded-full ${result.error
+                          ? "bg-yellow-400"
+                          : result.available
+                            ? "bg-green-400"
+                            : "bg-red-400"
+                          }`}
                       />
                       <svg
                         className="w-3 h-3 text-white/15 group-hover:text-white/40 transition-colors"
