@@ -28,7 +28,7 @@ Built for developers, domain investors, and branding experts.
 ## Quick Demo
 
 <p align="center" width="100%">
-<video src="https://github.com/user-attachments/assets/62544173-3f6a-4e67-9d3d-472170bb8282" width="80%" controls></video>
+<video src="https://github.com/user-attachments/assets/5c3bcb5c-2008-4658-88e1-b64d07c388c8" width="80%" controls></video>
 </p>
 
 ## Key Features
