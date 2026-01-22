@@ -50,6 +50,16 @@ Avail is intentionally designed as a **stateless, read-only inspection tool**. A
 - **Workspace-Style Interface** — Multi-panel WHOIS inspection with side-by-side views, built-in themes, and a layout optimized for comparison and long-running research sessions
 - **Type-Safe Architecture** — Built with TypeScript for enhanced reliability and developer experience
 
+### Workspace-Style WHOIS Inspection
+
+Avail supports multi-panel WHOIS inspection, allowing multiple domains and TLDs to be viewed side-by-side for comparison during research sessions.
+
+<div align="center">
+  <img src="docs/assets/avail-interface-workspace.png"
+       alt="Avail multi-panel WHOIS workspace"
+       style="border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+</div>
+
 ## Technology Stack
 
 - **Framework:** [Next.js 16](https://nextjs.org/) (App Router)
