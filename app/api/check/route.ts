@@ -197,21 +197,20 @@ async function checkDomainAvailability(
   const fullDomain = `${domain}.${tld}`;
 
   try {
-    const data = await whois(fullDomain, { timeout: 8000 });
-    const whoisData = data as Record<string, unknown>;
-    const taken = isDomainTaken(whoisData);
+    const rdapData = await lookupRdap(fullDomain, tld);
+    const taken = isDomainTakenFromRdap(rdapData);
+    const whoisData = convertRdapToWhoisFormat(rdapData);
 
     return {
       available: !taken,
       whoisData: taken ? whoisData : null,
     };
-  } catch (whoisError: unknown) {
-    const errorMessage = whoisError instanceof Error ? whoisError.message : String(whoisError);
+  } catch (rdapError: unknown) {
+    const errorMessage = rdapError instanceof Error ? rdapError.message : String(rdapError);
     const isNotFound =
-      errorMessage.toLowerCase().includes("no match") ||
+      errorMessage.toLowerCase().includes("404") ||
       errorMessage.toLowerCase().includes("not found") ||
-      errorMessage.toLowerCase().includes("no entries found") ||
-      errorMessage.toLowerCase().includes("no data found");
+      errorMessage.toLowerCase().includes("no rdap server available");
 
     if (isNotFound) {
       return {
@@ -221,20 +220,20 @@ async function checkDomainAvailability(
     }
 
     try {
-      const rdapData = await lookupRdap(fullDomain, tld);
-      const taken = isDomainTakenFromRdap(rdapData);
-      const whoisData = convertRdapToWhoisFormat(rdapData);
+      const data = await whois(fullDomain, { timeout: 8000 });
+      const whoisData = data as Record<string, unknown>;
+      const taken = isDomainTaken(whoisData);
 
       return {
         available: !taken,
         whoisData: taken ? whoisData : null,
       };
-    } catch (rdapError) {
-      const rdapErrorMessage = rdapError instanceof Error ? rdapError.message : String(rdapError);
+    } catch (whoisError) {
+      const whoisErrorMessage = whoisError instanceof Error ? whoisError.message : String(whoisError);
       return {
         available: false,
         whoisData: null,
-        error: `Lookup failed: ${rdapErrorMessage}`,
+        error: `Lookup failed: ${whoisErrorMessage}`,
       };
     }
   }
