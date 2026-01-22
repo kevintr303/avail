@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import whoiser from "whoiser";
 import { rateLimit, isOriginAllowed } from "@/lib/rate-limit";
+import whoisFallbacks from "@/config/whois-fallbacks.json";
 
 interface CheckRequest {
   domain: string;
@@ -229,12 +230,16 @@ function convertRdapToWhoisFormat(rdapData: RdapResponse | null): Record<string,
         const registrarName = extractVcardField(registrar.vcardArray, "fn");
         whoisData.registrar = registrarName || "Registrar";
 
-        const registrarId = registrar.publicIds?.find((id: { type?: string }) => id.type === "IANA Registrar ID");
+        const registrarId = registrar.publicIds?.find(
+          (id: { type?: string }) => id.type === "IANA Registrar ID"
+        );
         if (registrarId && "identifier" in registrarId) {
           whoisData["Registrar IANA ID"] = registrarId.identifier;
         }
 
-        const abuseEntity = registrar.entities?.find((e: { roles?: string[] }) => e.roles?.includes("abuse"));
+        const abuseEntity = registrar.entities?.find((e: { roles?: string[] }) =>
+          e.roles?.includes("abuse")
+        );
         if (abuseEntity) {
           const abuseEmail = extractVcardField(abuseEntity.vcardArray, "email");
           const abusePhone = extractVcardField(abuseEntity.vcardArray, "tel");
@@ -263,6 +268,57 @@ function extractVcardField(vcardArray: unknown, fieldName: string): string | nul
   return null;
 }
 
+function tryFallbackWhois(
+  domain: string,
+  tld: string
+): Promise<{ available: boolean; whoisData: Record<string, unknown> | null } | null> {
+  return lookupFallbackWhois(domain, tld).then((fallbackData) => {
+    if (!fallbackData) {
+      return null;
+    }
+    const fallbackTaken = isDomainTaken(fallbackData);
+    return {
+      available: !fallbackTaken,
+      whoisData: fallbackTaken && Object.keys(fallbackData).length > 0 ? fallbackData : null,
+    };
+  });
+}
+
+async function lookupFallbackWhois(
+  domain: string,
+  tld: string
+): Promise<Record<string, unknown> | null> {
+  const fallbackServer = (whoisFallbacks as Record<string, string>)[tld.toLowerCase()];
+  if (!fallbackServer) {
+    return null;
+  }
+
+  try {
+    const whoiserResult = await whoiser(domain, {
+      host: fallbackServer,
+      timeout: 8000,
+    } as Parameters<typeof whoiser>[1]);
+
+    if (whoiserResult && typeof whoiserResult === "object") {
+      const servers = Object.keys(whoiserResult);
+      if (servers.length > 0) {
+        const firstServerData = whoiserResult[servers[0]];
+        if (
+          firstServerData &&
+          typeof firstServerData === "object" &&
+          !("error" in firstServerData)
+        ) {
+          return firstServerData as Record<string, unknown>;
+        }
+      }
+    }
+  } catch {
+    return null;
+  }
+
+  return null;
+}
+
 async function checkDomainAvailability(
   domain: string,
   tld: string
@@ -279,13 +335,22 @@ async function checkDomainAvailability(
   try {
     const whoiserResult = await whoiser(fullDomain, { timeout: 8000 });
 
-    if (whoiserResult && typeof whoiserResult === 'object') {
+    if (whoiserResult && typeof whoiserResult === "object") {
       const servers = Object.keys(whoiserResult);
       if (servers.length > 0) {
-        const firstServerData = whoiserResult[servers[0]];
-        if (firstServerData && typeof firstServerData === 'object') {
-          whoisData = firstServerData as Record<string, unknown>;
-          whoisTaken = isDomainTaken(whoisData);
+        let allErrors = true;
+        for (const server of servers) {
+          const serverData = whoiserResult[server];
+          if (serverData && typeof serverData === "object" && !("error" in serverData)) {
+            allErrors = false;
+            whoisData = serverData as Record<string, unknown>;
+            whoisTaken = isDomainTaken(whoisData);
+            break;
+          }
+        }
+
+        if (allErrors) {
+          throw new Error("All WHOIS servers returned errors");
         }
       }
     }
@@ -305,7 +370,11 @@ async function checkDomainAvailability(
         const rdapResult = await lookupRdap(fullDomain, tld);
         rdapTaken = isDomainTakenFromRdap(rdapResult);
         rdapData = convertRdapToWhoisFormat(rdapResult);
-      } catch (rdapError) {
+      } catch {
+        const fallbackResult = await tryFallbackWhois(fullDomain, tld);
+        if (fallbackResult) {
+          return fallbackResult;
+        }
         return {
           available: true,
           whoisData: null,
@@ -325,7 +394,11 @@ async function checkDomainAvailability(
       const rdapResult = await lookupRdap(fullDomain, tld);
       rdapTaken = isDomainTakenFromRdap(rdapResult);
       rdapData = convertRdapToWhoisFormat(rdapResult);
-    } catch (rdapError) {
+    } catch {
+      const fallbackResult = await tryFallbackWhois(fullDomain, tld);
+      if (fallbackResult) {
+        return fallbackResult;
+      }
       return {
         available: false,
         whoisData: null,
@@ -340,7 +413,11 @@ async function checkDomainAvailability(
   }
 
   const textField = whoisData?.["Text"] || whoisData?.["text"];
-  const textString = textField ? (Array.isArray(textField) ? textField.join(" ") : String(textField)) : "";
+  const textString = textField
+    ? Array.isArray(textField)
+      ? textField.join(" ")
+      : String(textField)
+    : "";
   const isTldNotSupported = textString.toLowerCase().includes("tld is not supported");
 
   if (isTldNotSupported) {
@@ -353,19 +430,28 @@ async function checkDomainAvailability(
         const rdapResult = await lookupRdap(fullDomain, tld);
         rdapTaken = isDomainTakenFromRdap(rdapResult);
         rdapData = convertRdapToWhoisFormat(rdapResult);
-      } catch (rdapError) {
+      } catch {
+        const fallbackResult = await tryFallbackWhois(fullDomain, tld);
+        if (fallbackResult) {
+          return fallbackResult;
+        }
       }
 
       return {
         available: !rdapTaken,
         whoisData: rdapTaken && rdapData && Object.keys(rdapData).length > 0 ? rdapData : null,
       };
-    } else {
-      return {
-        available: !whoisTaken,
-        whoisData: whoisTaken && whoisData && Object.keys(whoisData).length > 0 ? whoisData : null,
-      };
     }
+
+    const fallbackResult = await tryFallbackWhois(fullDomain, tld);
+    if (fallbackResult) {
+      return fallbackResult;
+    }
+
+    return {
+      available: !whoisTaken,
+      whoisData: whoisTaken && whoisData && Object.keys(whoisData).length > 0 ? whoisData : null,
+    };
   }
 
   let rdapData: Record<string, unknown> | null = null;
@@ -375,7 +461,13 @@ async function checkDomainAvailability(
     const rdapResult = await lookupRdap(fullDomain, tld);
     rdapTaken = isDomainTakenFromRdap(rdapResult);
     rdapData = convertRdapToWhoisFormat(rdapResult);
-  } catch (rdapError) {
+  } catch {
+    if (!whoisData || Object.keys(whoisData).length === 0 || !whoisTaken) {
+      const fallbackResult = await tryFallbackWhois(fullDomain, tld);
+      if (fallbackResult) {
+        return fallbackResult;
+      }
+    }
   }
 
   const mergedData: Record<string, unknown> = {

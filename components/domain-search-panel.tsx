@@ -359,12 +359,13 @@ export default function DomainSearchPanel({ onResultClick }: DomainSearchPanelPr
                                     data-clickable
                                     onClick={() => !isDisabled && handleTldToggle(tld)}
                                     disabled={isDisabled}
-                                    className={`text-[11px] px-2.5 py-1.5 rounded-md transition-all ${isSelected
+                                    className={`text-[11px] px-2.5 py-1.5 rounded-md transition-all ${
+                                      isSelected
                                         ? "bg-[var(--color-quinary)]/20 text-[var(--color-quinary)] border border-[var(--color-quinary)]/30"
                                         : isDisabled
                                           ? "bg-white/3 text-white/15 border border-white/5 cursor-not-allowed"
                                           : "bg-white/5 text-white/40 border border-white/5 hover:bg-white/10 hover:text-white/60"
-                                      }`}
+                                    }`}
                                   >
                                     .{tld}
                                   </button>
@@ -392,12 +393,13 @@ export default function DomainSearchPanel({ onResultClick }: DomainSearchPanelPr
                                     data-clickable
                                     onClick={() => !isDisabled && handleTldToggle(tld)}
                                     disabled={isDisabled}
-                                    className={`text-[11px] px-2.5 py-1.5 rounded-md transition-all ${isSelected
+                                    className={`text-[11px] px-2.5 py-1.5 rounded-md transition-all ${
+                                      isSelected
                                         ? "bg-[var(--color-quinary)]/20 text-[var(--color-quinary)] border border-[var(--color-quinary)]/30"
                                         : isDisabled
                                           ? "bg-white/3 text-white/15 border border-white/5 cursor-not-allowed"
                                           : "bg-white/5 text-white/40 border border-white/5 hover:bg-white/10 hover:text-white/60"
-                                      }`}
+                                    }`}
                                   >
                                     .{tld}
                                   </button>
@@ -469,12 +471,13 @@ export default function DomainSearchPanel({ onResultClick }: DomainSearchPanelPr
                     <span className="text-xs font-medium text-white/80">{result.domain}</span>
                     <div className="flex items-center gap-1.5">
                       <div
-                        className={`w-2 h-2 rounded-full ${result.error
+                        className={`w-2 h-2 rounded-full ${
+                          result.error
                             ? "bg-yellow-400"
                             : result.available
                               ? "bg-green-400"
                               : "bg-red-400"
-                          }`}
+                        }`}
                       />
                       <svg
                         className="w-3 h-3 text-white/15 group-hover:text-white/40 transition-colors"

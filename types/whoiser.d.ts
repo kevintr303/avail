@@ -4,6 +4,7 @@ declare module "whoiser" {
     follow?: number;
     raw?: boolean;
     ignorePrivacy?: boolean;
+    host?: string;
   }
 
   type WhoiserResult = Record<string, Record<string, unknown>>;
