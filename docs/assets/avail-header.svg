@@ -1,0 +1,39 @@
+<svg viewBox="0 0 600 150" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Avail logo</title>
+  <desc id="desc">A coral gradient mark followed by the word “Avail” in white.</desc>
+
+  <defs>
+    <linearGradient id="coralGradient" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0" stop-color="#FF6B6B" />
+      <stop offset="1" stop-color="#FF8E53" />
+    </linearGradient>
+
+    <style>
+      .mark {
+        fill: none;
+        stroke: url(#coralGradient);
+        stroke-width: 60;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      .wordmark {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        font-weight: 700;
+        font-size: 80px;
+        letter-spacing: -2px;
+        fill: #fff;
+      }
+    </style>
+  </defs>
+
+  <g transform="translate(140 25)">
+    <!-- Mark -->
+    <g transform="scale(0.25)" aria-hidden="true">
+      <path class="mark" d="M100 400 L250 50 L400 400" />
+      <path class="mark" d="M140 250 L250 320 L420 150" />
+    </g>
+
+    <!-- Text -->
+    <text class="wordmark" x="130" y="55" dominant-baseline="central">Avail</text>
+  </g>
+</svg>

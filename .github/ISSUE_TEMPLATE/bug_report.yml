@@ -1,0 +1,91 @@
+name: Bug Report
+description: Report a bug or unexpected behavior in Avail
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug! Please provide the details below to help us reproduce and fix the issue.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: A clear description of what went wrong
+      placeholder: Describe the bug in 1-2 sentences...
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce
+      description: How can we reproduce this issue?
+      placeholder: |
+        1. Go to '...'
+        2. Enter domain '...'
+        3. Select TLD '...'
+        4. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What should have happened?
+      placeholder: Describe the expected outcome...
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      description: What actually happened?
+      placeholder: Describe what actually occurred...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Affected Area
+      description: Which part of Avail is affected?
+      options:
+        - Domain Search
+        - WHOIS Panel
+        - TLD Selection
+        - UI/Interface
+        - API/Backend
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Browser, OS, and any other relevant details
+      placeholder: |
+        - Browser: Chrome 131
+        - OS: macOS 15.2
+        - Node.js version (if self-hosting): 18.x
+      render: markdown
+    validations:
+      required: false
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots & Logs
+      description: Add screenshots or console errors (if applicable)
+      placeholder: Drag and drop screenshots or paste console output here...
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Anything else we should know?
+      placeholder: Any other relevant details...

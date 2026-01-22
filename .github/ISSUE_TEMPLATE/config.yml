@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Documentation
+    url: https://github.com/kevintr303/avail/blob/main/docs/README.md
+    about: Check out the documentation for usage guides and API reference
+  - name: Discussions
+    url: https://github.com/kevintr303/avail/discussions
+    about: Ask questions and discuss ideas with the community

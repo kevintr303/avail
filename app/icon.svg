@@ -1,0 +1,31 @@
+<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Avail icon</title>
+  <desc id="desc">A coral gradient abstract A/checkmark mark inside a dark rounded square.</desc>
+
+  <defs>
+    <linearGradient id="coralGradient" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FF6B6B" />
+      <stop offset="1" stop-color="#FF8E53" />
+    </linearGradient>
+
+    <style>
+      .mark {
+        fill: none;
+        stroke: url(#coralGradient);
+        stroke-width: 60;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+    </style>
+  </defs>
+
+  <!-- Background -->
+  <rect x="32" y="32" width="448" height="448" rx="120" fill="#1E1E1E" />
+
+  <!-- Mark -->
+  <g transform="translate(106 106) scale(0.6)" aria-hidden="true">
+    <path class="mark" d="M100 400 L250 50" />
+    <path class="mark" d="M250 50 L400 400" />
+    <path class="mark" d="M140 250 L250 320 L420 150" />
+  </g>
+</svg>

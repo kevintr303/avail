@@ -1,0 +1,108 @@
+<div align="center">
+
+<img src="docs/assets/avail-header.svg" alt="Avail Logo" width="600" height="120" />
+
+**A robust, modern domain intelligence platform.**
+
+Check domain availability across 1000+ TLDs with real-time WHOIS and RDAP lookups.  
+Built for developers, domain investors, and branding experts.
+
+<br />
+
+[**Explore Docs**](docs/README.md) · [**Report Bug**](https://github.com/kevintr303/avail/issues/new) · [**Request Feature**](https://github.com/kevintr303/avail/issues/new)
+
+</div>
+
+## Interface Preview
+
+<div align="center">
+  <img src="docs/assets/avail-interface.png" alt="Avail Interface" style="border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+</div>
+
+<br />
+
+## Overview
+
+**Avail** is a domain availability checker designed to streamline domain research and branding workflows. It provides an efficient interface for checking domain availability across multiple top-level domains while delivering comprehensive WHOIS data and registration details through an intuitive, responsive UI.
+
+## Quick Demo
+
+<p align="center" width="100%">
+<video src="https://github.com/user-attachments/assets/62544173-3f6a-4e67-9d3d-472170bb8282" width="80%" controls></video>
+</p>
+
+## Key Features
+
+- **Multi-TLD Support** — Query domain availability across 1,000+ TLDs simultaneously
+- **Real-Time WHOIS Data** — Access registration dates, registrar information, nameservers, and registry details instantly
+- **Batch Domain Search** — Check multiple domain extensions in a single search operation
+- **Modern Interface** — Clean, responsive design optimized for both desktop and mobile workflows
+- **Type-Safe Architecture** — Built with TypeScript for enhanced reliability and developer experience
+
+## Technology Stack
+
+- **Framework:** [Next.js 16](https://nextjs.org/) (App Router)
+- **Language:** [TypeScript 5](https://www.typescriptlang.org/)
+- **UI Library:** [React 19](https://react.dev/)
+- **Styling:** [Tailwind CSS 4](https://tailwindcss.com/)
+- **Components:** [Radix UI](https://www.radix-ui.com/) (Tabs, Select, Scroll Area, Slot)
+- **Icons:** [Lucide React](https://lucide.dev/)
+- **Domain Lookup:** [whois-json](https://www.npmjs.com/package/whois-json)
+- **Utilities:** clsx, class-variance-authority, tailwind-merge
+
+## Installation
+
+### Prerequisites
+
+- Node.js 18.x or higher
+- npm, yarn, or pnpm package manager
+
+### Setup
+
+1. Clone the repository:
+
+   ```bash
+   git clone https://github.com/kevintr303/avail.git
+   cd avail
+   ```
+
+2. Install dependencies:
+
+   ```bash
+   npm install
+   ```
+
+3. Start the development server:
+
+   ```bash
+   npm run dev
+   ```
+
+4. Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+### Available Scripts
+
+- `npm run dev` — Start development server
+- `npm run build` — Build for production
+- `npm start` — Start production server
+- `npm run lint` — Run ESLint
+
+## Usage
+
+1. Enter a domain name in the search field
+2. Select specific TLDs or search across all available extensions
+3. View availability status and detailed WHOIS information for each domain
+4. Click on any domain to access comprehensive registration details
+
+## License
+
+This project is licensed under the **GNU Affero General Public License v3.0**.  
+See the [LICENSE](LICENSE) file for details.
+
+---
+
+<div align="center">
+
+**Built by [Bow Dot Red](https://bow.red)**
+
+</div>
