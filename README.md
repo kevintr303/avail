@@ -49,6 +49,7 @@ Avail is intentionally designed as a **stateless, read-only inspection tool**. A
 - **Batch Domain Search** — Check multiple domain extensions in a single search operation
 - **Workspace-Style Interface** — Multi-panel WHOIS inspection with side-by-side views, built-in themes, and a layout optimized for comparison and long-running research sessions
 - **Type-Safe Architecture** — Built with TypeScript for enhanced reliability and developer experience
+- **Mobile Navigation** — On smaller screens, active inspection views are presented as swipeable pages with a paged indicator for quick navigation
 
 ### Workspace-Style WHOIS Inspection
 
