@@ -105,9 +105,26 @@ export default function DomainSearchPanel({ onResultClick }: DomainSearchPanelPr
     let searchTlds: string[];
 
     if (hasTld) {
-      const tld = parts.slice(-1)[0];
-      searchDomain = parts.slice(0, -1).join(".");
-      searchTlds = [tld];
+      let foundTld = "";
+      let domainParts: string[] = [];
+      
+      for (let i = parts.length - 1; i >= 1; i--) {
+        const potentialTld = parts.slice(i).join(".");
+        if (tlds.includes(potentialTld)) {
+          foundTld = potentialTld;
+          domainParts = parts.slice(0, i);
+          break;
+        }
+      }
+
+      if (foundTld) {
+        searchDomain = domainParts.join(".");
+        searchTlds = [foundTld];
+      } else {
+        searchDomain = parts.slice(0, -1).join(".");
+        const tld = parts.slice(-1)[0];
+        searchTlds = [tld];
+      }
     } else {
       if (selectedTlds.length === 0) return;
       searchDomain = cleanedInput;

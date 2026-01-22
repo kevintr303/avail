@@ -538,7 +538,7 @@ export async function POST(request: NextRequest) {
     const cleanDomain = domain
       .trim()
       .toLowerCase()
-      .replace(/[^a-z0-9-]/g, "");
+      .replace(/[^a-z0-9.-]/g, "");
 
     if (!cleanDomain) {
       return NextResponse.json({ error: "Invalid domain name" }, { status: 400 });
