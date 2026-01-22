@@ -69,7 +69,7 @@ Avail supports multi-panel WHOIS inspection, allowing multiple domains and TLDs 
 - **Styling:** [Tailwind CSS 4](https://tailwindcss.com/)
 - **Components:** [Radix UI](https://www.radix-ui.com/) (Tabs, Select, Scroll Area, Slot)
 - **Icons:** [Lucide React](https://lucide.dev/)
-- **Domain Lookup:** [whois-json](https://www.npmjs.com/package/whois-json)
+- **Domain Lookup:** [whoiser](https://www.npmjs.com/package/whoiser)
 - **Utilities:** clsx, class-variance-authority, tailwind-merge
 
 ## Installation

@@ -23,7 +23,7 @@ Avail is built on **Next.js 16** using the App Router architecture, providing a 
 - **UI:** React 19
 - **Styling:** Tailwind CSS 4
 - **Components:** Radix UI primitives
-- **Domain Lookup:** whois-json with RDAP fallback
+- **Domain Lookup:** whoiser with RDAP fallback
 
 ### Project Structure
 
@@ -450,6 +450,7 @@ No environment variables are currently required. The application uses:
 
 - **Caching:**
   - TLD lists cached in memory for 24 hours
+  - TLD lists cached in browser localStorage for 24 hours
   - RDAP bootstrap data cached in memory for 24 hours
   - Next.js fetch cache with 86400 second revalidation
 - **Rate Limiting:** 10 requests per minute per IP address

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import whois from "whois-json";
+import whoiser from "whoiser";
 import { rateLimit, isOriginAllowed } from "@/lib/rate-limit";
 
 interface CheckRequest {
@@ -13,7 +13,16 @@ interface RdapResponse {
   nameservers?: Array<{ ldhName?: string }>;
   events?: Array<{ eventAction?: string; eventDate?: string }>;
   status?: string[];
-  entities?: Array<{ roles?: string[]; vcardArray?: unknown[] }>;
+  entities?: Array<{
+    roles?: string[];
+    vcardArray?: unknown[];
+    publicIds?: Array<{ type?: string; identifier?: string }>;
+    entities?: Array<{ roles?: string[]; vcardArray?: unknown[] }>;
+  }>;
+  secureDNS?: {
+    delegationSigned?: boolean;
+    maxSigLife?: number;
+  };
 }
 
 interface BootstrapCache {
@@ -80,6 +89,19 @@ const UNAVAILABLE_INDICATORS = [
   "registrarRegistrationExpirationDate",
   "updatedDate",
   "nameServer",
+  "Domain Name",
+  "Registrar",
+  "Registrant Organization",
+  "Creation Date",
+  "Created Date",
+  "Registry Expiry Date",
+  "Registrar Registration Expiration Date",
+  "Updated Date",
+  "Name Server",
+  "Nameserver",
+  "Registry Domain ID",
+  "Registrar WHOIS Server",
+  "Registrar URL",
 ];
 
 function isDomainTaken(data: Record<string, unknown> | null): boolean {
@@ -87,9 +109,27 @@ function isDomainTaken(data: Record<string, unknown> | null): boolean {
   if (typeof data !== "object") return false;
   if (Object.keys(data).length === 0) return false;
 
-  return UNAVAILABLE_INDICATORS.some(
-    (key) => data[key] !== undefined && data[key] !== null && data[key] !== ""
-  );
+  const textField = data["Text"] || data["text"];
+  if (textField) {
+    const textString = Array.isArray(textField) ? textField.join(" ") : String(textField);
+    const lowerText = textString.toLowerCase();
+    if (
+      lowerText.includes("not found") ||
+      lowerText.includes("no match") ||
+      lowerText.includes("no entries found") ||
+      lowerText.includes("no data found") ||
+      lowerText.includes("domain not found")
+    ) {
+      return false;
+    }
+  }
+
+  return UNAVAILABLE_INDICATORS.some((key) => {
+    const value = data[key];
+    if (value === undefined || value === null || value === "") return false;
+    if (Array.isArray(value) && value.length === 0) return false;
+    return true;
+  });
 }
 
 function isDomainTakenFromRdap(rdapData: RdapResponse | null): boolean {
@@ -175,15 +215,52 @@ function convertRdapToWhoisFormat(rdapData: RdapResponse | null): Record<string,
       if (expirationEvent?.eventDate) {
         whoisData.registrarRegistrationExpirationDate = expirationEvent.eventDate;
       }
+      const lastChangedEvent = rdapData.events.find((e) => e.eventAction === "last changed");
+      if (lastChangedEvent?.eventDate) {
+        whoisData.updatedDate = lastChangedEvent.eventDate;
+      }
+    }
+    if (rdapData.status) {
+      whoisData["Domain Status"] = rdapData.status;
     }
     if (rdapData.entities) {
       const registrar = rdapData.entities.find((e) => e.roles?.includes("registrar"));
       if (registrar) {
-        whoisData.registrar = "Registrar";
+        const registrarName = extractVcardField(registrar.vcardArray, "fn");
+        whoisData.registrar = registrarName || "Registrar";
+
+        const registrarId = registrar.publicIds?.find((id: { type?: string }) => id.type === "IANA Registrar ID");
+        if (registrarId && "identifier" in registrarId) {
+          whoisData["Registrar IANA ID"] = registrarId.identifier;
+        }
+
+        const abuseEntity = registrar.entities?.find((e: { roles?: string[] }) => e.roles?.includes("abuse"));
+        if (abuseEntity) {
+          const abuseEmail = extractVcardField(abuseEntity.vcardArray, "email");
+          const abusePhone = extractVcardField(abuseEntity.vcardArray, "tel");
+          if (abuseEmail) whoisData["Abuse Contact Email"] = abuseEmail;
+          if (abusePhone) whoisData["Abuse Contact Phone"] = abusePhone;
+        }
       }
+    }
+    if (rdapData.secureDNS) {
+      whoisData["DNSSEC"] = rdapData.secureDNS.delegationSigned ? "signed" : "unsigned";
     }
   }
   return whoisData;
+}
+
+function extractVcardField(vcardArray: unknown, fieldName: string): string | null {
+  if (!Array.isArray(vcardArray) || vcardArray.length < 2) return null;
+  const vcardData = vcardArray[1];
+  if (!Array.isArray(vcardData)) return null;
+
+  for (const entry of vcardData) {
+    if (Array.isArray(entry) && entry.length >= 4 && entry[0] === fieldName) {
+      return String(entry[3] || "");
+    }
+  }
+  return null;
 }
 
 async function checkDomainAvailability(
@@ -196,47 +273,122 @@ async function checkDomainAvailability(
 }> {
   const fullDomain = `${domain}.${tld}`;
 
-  try {
-    const rdapData = await lookupRdap(fullDomain, tld);
-    const taken = isDomainTakenFromRdap(rdapData);
-    const whoisData = convertRdapToWhoisFormat(rdapData);
+  let whoisData: Record<string, unknown> | null = null;
+  let whoisTaken = false;
 
-    return {
-      available: !taken,
-      whoisData: taken ? whoisData : null,
-    };
-  } catch (rdapError: unknown) {
-    const errorMessage = rdapError instanceof Error ? rdapError.message : String(rdapError);
+  try {
+    const whoiserResult = await whoiser(fullDomain, { timeout: 8000 });
+
+    if (whoiserResult && typeof whoiserResult === 'object') {
+      const servers = Object.keys(whoiserResult);
+      if (servers.length > 0) {
+        const firstServerData = whoiserResult[servers[0]];
+        if (firstServerData && typeof firstServerData === 'object') {
+          whoisData = firstServerData as Record<string, unknown>;
+          whoisTaken = isDomainTaken(whoisData);
+        }
+      }
+    }
+  } catch (whoisError) {
+    const whoisErrorMessage = whoisError instanceof Error ? whoisError.message : String(whoisError);
     const isNotFound =
-      errorMessage.toLowerCase().includes("404") ||
-      errorMessage.toLowerCase().includes("not found") ||
-      errorMessage.toLowerCase().includes("no rdap server available");
+      whoisErrorMessage.toLowerCase().includes("no match") ||
+      whoisErrorMessage.toLowerCase().includes("not found") ||
+      whoisErrorMessage.toLowerCase().includes("no entries found") ||
+      whoisErrorMessage.toLowerCase().includes("no data found");
 
     if (isNotFound) {
+      let rdapData: Record<string, unknown> | null = null;
+      let rdapTaken = false;
+
+      try {
+        const rdapResult = await lookupRdap(fullDomain, tld);
+        rdapTaken = isDomainTakenFromRdap(rdapResult);
+        rdapData = convertRdapToWhoisFormat(rdapResult);
+      } catch (rdapError) {
+        return {
+          available: true,
+          whoisData: null,
+        };
+      }
+
       return {
-        available: true,
-        whoisData: null,
+        available: !rdapTaken,
+        whoisData: rdapTaken && Object.keys(rdapData).length > 0 ? rdapData : null,
       };
     }
 
-    try {
-      const data = await whois(fullDomain, { timeout: 8000 });
-      const whoisData = data as Record<string, unknown>;
-      const taken = isDomainTaken(whoisData);
+    let rdapData: Record<string, unknown> | null = null;
+    let rdapTaken = false;
 
-      return {
-        available: !taken,
-        whoisData: taken ? whoisData : null,
-      };
-    } catch (whoisError) {
-      const whoisErrorMessage = whoisError instanceof Error ? whoisError.message : String(whoisError);
+    try {
+      const rdapResult = await lookupRdap(fullDomain, tld);
+      rdapTaken = isDomainTakenFromRdap(rdapResult);
+      rdapData = convertRdapToWhoisFormat(rdapResult);
+    } catch (rdapError) {
       return {
         available: false,
         whoisData: null,
         error: `Lookup failed: ${whoisErrorMessage}`,
       };
     }
+
+    return {
+      available: !rdapTaken,
+      whoisData: rdapTaken && Object.keys(rdapData).length > 0 ? rdapData : null,
+    };
   }
+
+  const textField = whoisData?.["Text"] || whoisData?.["text"];
+  const textString = textField ? (Array.isArray(textField) ? textField.join(" ") : String(textField)) : "";
+  const isTldNotSupported = textString.toLowerCase().includes("tld is not supported");
+
+  if (isTldNotSupported) {
+    const rdapServer = await getRdapServer(tld);
+    if (rdapServer) {
+      let rdapData: Record<string, unknown> | null = null;
+      let rdapTaken = false;
+
+      try {
+        const rdapResult = await lookupRdap(fullDomain, tld);
+        rdapTaken = isDomainTakenFromRdap(rdapResult);
+        rdapData = convertRdapToWhoisFormat(rdapResult);
+      } catch (rdapError) {
+      }
+
+      return {
+        available: !rdapTaken,
+        whoisData: rdapTaken && rdapData && Object.keys(rdapData).length > 0 ? rdapData : null,
+      };
+    } else {
+      return {
+        available: !whoisTaken,
+        whoisData: whoisTaken && whoisData && Object.keys(whoisData).length > 0 ? whoisData : null,
+      };
+    }
+  }
+
+  let rdapData: Record<string, unknown> | null = null;
+  let rdapTaken = false;
+
+  try {
+    const rdapResult = await lookupRdap(fullDomain, tld);
+    rdapTaken = isDomainTakenFromRdap(rdapResult);
+    rdapData = convertRdapToWhoisFormat(rdapResult);
+  } catch (rdapError) {
+  }
+
+  const mergedData: Record<string, unknown> = {
+    ...rdapData,
+    ...whoisData,
+  };
+
+  const taken = whoisTaken || rdapTaken;
+
+  return {
+    available: !taken,
+    whoisData: taken && Object.keys(mergedData).length > 0 ? mergedData : null,
+  };
 }
 
 export async function POST(request: NextRequest) {
