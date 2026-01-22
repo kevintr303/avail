@@ -146,6 +146,8 @@ export default function DomainSearchPanel({ onResultClick }: DomainSearchPanelPr
             <div className="relative flex-1">
               <Input
                 ref={inputRef}
+                id="domain-input"
+                name="domain"
                 type="text"
                 placeholder="Domain name..."
                 value={domain}
