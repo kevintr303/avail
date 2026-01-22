@@ -30,11 +30,24 @@ export default function DomainSearchPanel({ onResultClick }: DomainSearchPanelPr
 
   useEffect(() => {
     const fetchTlds = async () => {
+      const cached = storage.getCachedTlds();
+      if (cached) {
+        setTlds(cached.tlds);
+        setPopularTlds(cached.popular);
+        setLoadingTlds(false);
+        return;
+      }
+
       try {
         const response = await fetch("/api/tlds");
         const data = await response.json();
-        setTlds(data.tlds || []);
-        setPopularTlds(data.popular || []);
+        const fetchedTlds = data.tlds || [];
+        const fetchedPopular = data.popular || [];
+
+        setTlds(fetchedTlds);
+        setPopularTlds(fetchedPopular);
+
+        storage.setCachedTlds(fetchedTlds, fetchedPopular);
       } catch (error) {
         if (process.env.NODE_ENV === "development") {
           console.error("Failed to fetch TLDs:", error);
