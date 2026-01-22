@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for your interest in contributing! 
+Thanks for your interest in contributing!
 
 1. Fork the repo
 2. Make your changes
