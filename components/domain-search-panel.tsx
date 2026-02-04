@@ -28,10 +28,12 @@ export default function DomainSearchPanel({ onResultClick }: DomainSearchPanelPr
   const inputRef = useRef<HTMLInputElement>(null);
   const tldSearchRef = useRef<HTMLInputElement>(null);
 
+  const apiBasePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
+
   useEffect(() => {
     const fetchTlds = async () => {
       try {
-        const response = await fetch("/api/tlds");
+        const response = await fetch(`${apiBasePath}/api/tlds`);
         const data = await response.json();
         const fetchedTlds = data.tlds || [];
         const fetchedPopular = data.popular || [];
@@ -135,7 +137,7 @@ export default function DomainSearchPanel({ onResultClick }: DomainSearchPanelPr
     setResults([]);
 
     try {
-      const response = await fetch("/api/check", {
+      const response = await fetch(`${apiBasePath}/api/check`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ domain: searchDomain, tlds: searchTlds }),
